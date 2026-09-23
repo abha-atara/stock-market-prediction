@@ -7,7 +7,7 @@ import ComparisonChart from './components/ComparisonChart'
 import AboutPage from './components/AboutPage'
 import './App.css'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API = import.meta.env.VITE_API_URL || ''
 
 
 const DEFAULT_STOCKS = [

@@ -12,10 +12,13 @@ from sklearn.metrics import mean_absolute_error
 from pydantic import BaseModel
 import warnings
 
-warnings.filterwarnings("ignore")
+import tempfile
 
-CACHE_DIR = "data"
-os.makedirs(CACHE_DIR, exist_ok=True)
+CACHE_DIR = os.environ.get("CACHE_DIR", os.path.join(tempfile.gettempdir(), "stock_data_cache"))
+try:
+    os.makedirs(CACHE_DIR, exist_ok=True)
+except Exception:
+    pass
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
