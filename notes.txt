@@ -1,0 +1,207 @@
+ITC STOCK MARKET PREDICTION PROJECT
+====================================
+ML Project - SOP Compliance Notes
+Computer Engineering Department
+
+---------------------------------------------------------------
+STEP 1: PROBLEM DEFINITION & DATASET EXPLORATION
+---------------------------------------------------------------
+Problem: Predict the next trading day's closing price for ITC stock (NSE)
+Dataset: Yahoo Finance OHLCV data (Jan 2015 - Aug 2026) via yfinance
+Features: Open, High, Low, Volume
+Target: Next day's Close price (shifted by 1)
+
+EDA Questions Answered (20):
+ 1.  Number of rows and columns
+ 2.  Column names
+ 3.  First 5 rows
+ 4.  Datatypes of each column
+ 5.  Missing values in each column
+ 6.  Duplicate rows
+ 7.  Statistical summary (describe)
+ 8.  Date range of dataset
+ 9.  Highest closing price
+10.  Date of highest closing price
+11.  Date of lowest closing price
+12.  Average closing price
+13.  Median closing price
+14.  Standard deviation of closing price
+15.  Variance of closing price
+16.  Highest trading volume day
+17.  Closing price over time (line chart)
+18.  Volume over time (line chart)
+19.  Relationship between Open and Close (scatter)
+20.  Average daily price range (High - Low)
+
+---------------------------------------------------------------
+STEP 2: DATA CLEANING & PREPROCESSING
+---------------------------------------------------------------
+- Checked: 0 missing values, 0 duplicate rows
+- Sorted index chronologically
+- Boxplot and histogram plotted for Close price
+- IQR-based outlier detection (reported, not removed - financial extremes are valid)
+- Feature scaling: StandardScaler applied inside sklearn Pipeline for SVR and CV
+- Categorical encoding: Not needed (all numerical features)
+
+---------------------------------------------------------------
+STEP 3: MODEL CREATION
+---------------------------------------------------------------
+Library Implementation (sklearn):
+  - LinearRegression
+  - Ridge Regression
+  - Lasso Regression
+  - ElasticNet
+  - SVR (RBF kernel)
+  - BaggingRegressor (base: LinearRegression)
+
+Manual Implementation (no library):
+  - Normal Equation: coefficients = (X.T @ X)^-1 @ X.T @ y
+  - Bias column added manually using np.c_
+  - Manual R2 and MAE computed from scratch using numpy
+  - Result: matches sklearn to 4 decimal places
+
+---------------------------------------------------------------
+STEP 4: MODEL EVALUATION
+---------------------------------------------------------------
+Metrics used:
+  - R2 Score (sklearn model.score)
+  - MAE (mean_absolute_error)
+
+Plots:
+  - Actual vs Predicted line chart
+  - Scatter plot (actual vs predicted)
+  - Tomorrow's closing price prediction demo
+
+Overfitting check:
+  - Train R2 vs Test R2 gap < 0.001 for deployed model (no overfitting)
+
+---------------------------------------------------------------
+STEP 5: ADVANCED MODEL TRAINING
+---------------------------------------------------------------
+Multi-model comparison (on ITC data):
+  Model               R2        MAE
+  Linear Regression   0.9898    4.03
+  Ridge               0.9912    3.70
+  Lasso               0.9913    3.70
+  ElasticNet          0.9913    3.70
+  SVR (Unscaled)     -8.408   162.34  <- FAILED (scale mismatch)
+  Bagging (LinReg)    0.9898    4.03
+
+Why SVR failed:
+  - Volume is in millions (10M+), price is 200-400
+  - SVR uses Euclidean distance - gets completely ruined by scale difference
+  - SVR also cannot extrapolate beyond training range (stock prices kept rising)
+
+Bagging/Boosting verdict for ITC:
+  - Bagging tested: 50 Linear Regressors -> R2 = 0.9898, same as single LR
+  - Linear regression already has near-zero variance, bagging does nothing
+  - Boosting not needed: bias is already minimal (MAE ~Rs 4 on Rs 300+ stock)
+  - Decision: Keep plain Linear Regression as deployed model
+
+Cross-Validation (TimeSeriesSplit, 5 folds):
+  - Applied only to training portion (67% of data)
+  - TimeSeriesSplit used so future data never leaks into training fold
+  - Models validated: LinReg, Ridge, SVR (scaled), Random Forest, Bagging
+  - Mean CV R2 for all linear models > 0.99 (confirms stability)
+  - ITC CV R2: 0.9979
+
+Hyperparameter Tuning (GridSearchCV + TimeSeriesSplit):
+  SVR parameters searched:
+    C: [1, 10, 100]
+    epsilon: [0.01, 0.1, 0.2]
+    gamma: ['scale', 0.01, 0.1]
+  
+  Random Forest parameters searched:
+    n_estimators: [100, 200]
+    max_depth: [None, 10, 20]
+    min_samples_split: [2, 5]
+
+---------------------------------------------------------------
+STEP 6: VISUALIZATION OF METRICS & GRAPHS
+---------------------------------------------------------------
+Graphs in notebook:
+  1. Closing price over time
+  2. Volume over time
+  3. Open vs Close scatter
+  4. Boxplot of Close
+  5. Histogram of Close
+  6. Actual vs Predicted (line chart)
+  7. Scatter: actual vs predicted
+  8. R2 comparison bar chart (test)
+  9. MAE comparison bar chart
+ 10. Actual vs Predicted for tuned SVR
+ 11. Residual scatter plot (SVR)
+ 12. CV stability bar chart with error bars
+
+Additional plots saved:
+  - itc_model_comparison.png (run itc_model_comparison.py)
+  - itc_model_all_predictions.png
+
+---------------------------------------------------------------
+STEP 7: FLASK / FASTAPI SETUP
+---------------------------------------------------------------
+Backend: FastAPI (Python) - backend/main.py
+Port: 8000
+
+Endpoints:
+  GET  /api/stocks                    -> list of all stocks with model info
+  GET  /api/stock/{ticker}/data       -> 90-day history + model metrics
+  GET  /api/stock/{ticker}/latest     -> today's OHLCV values
+  POST /api/stock/{ticker}/predict    -> prediction from input OHLV
+  GET  /api/compare                   -> all 3 stocks history for comparison chart
+  GET  /api/stock/ITC.NS/model-comparison -> full comparison table for ITC
+
+Run: uvicorn main:app --reload
+
+---------------------------------------------------------------
+STEP 8: FRONTEND WITH USER INPUT FORM
+---------------------------------------------------------------
+Tech: React + Vite (frontend/)
+Port: 5173
+
+Features:
+  - Stock dropdown: ITC / TCS / HDFC Bank
+  - Stat cards: Last Close, Open, High, Low, Volume, Model Used, Test R2, CV R2, MAE, Bagging status, Tuning status
+  - Interactive price chart: last 90 days actual vs predicted
+  - Predict panel: user inputs Open/High/Low/Volume -> API call -> shows predicted close
+  - About page: model info, comparison table, SOP details, tech stack
+
+Run: npm run dev
+
+---------------------------------------------------------------
+STEP 9: DEPLOYMENT
+---------------------------------------------------------------
+Production build: npm run build (frontend/dist/)
+Start script: start.bat (launches both backend + frontend)
+
+Model files:
+  - tomorrow_close_predict.pkl  (ITC - Linear Regression)
+  - tcs_model.pkl               (TCS - Random Forest, 200 trees)
+  - hdfc_model.pkl              (HDFC Bank - Random Forest, 200 trees)
+
+Data cache: /data folder (auto-created, reduces yfinance API calls)
+
+Additional stocks (TCS, HDFC Bank):
+  - Trained in separate .ipynb files (TCS_Stock_Model.ipynb, HDFC_Stock_Model.ipynb)
+  - Use Random Forest with 10 engineered features
+  - Extra features: Prev_Close, Price_Change, HL_Spread, OC_Spread, MA_5, MA_10
+  - CV R2: TCS 0.9971, HDFC 0.9968
+
+Note on GradientBoosting:
+  - Tested on HDFC (R2 = 0.9985) but replaced with RandomForest
+  - Reason: Python 3.14 + newer sklearn changed the _loss Cython module
+  - Pickle fails to load GBR .pkl files on Python 3.14
+  - RandomForest gives same accuracy and loads fine
+
+---------------------------------------------------------------
+RUN COMMANDS
+---------------------------------------------------------------
+Backend:
+  cd backend
+  uvicorn main:app --reload
+
+Frontend:
+  cd frontend
+  npm run dev
+
+Or just double-click start.bat

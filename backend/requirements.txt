@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+yfinance
+scikit-learn
+numpy
+pandas
+joblib
+matplotlib

@@ -1,0 +1,63 @@
+========================================
+  Stock Market Predictor – Run Commands
+========================================
+
+STEP 0: Install Dependencies (only first time)
+-------------------------------------------------
+Backend:
+  cd "e:\d2d btech sem 5\ML\Project(1)\backend"
+  pip install -r requirements.txt
+
+Frontend:
+  cd "e:\d2d btech sem 5\ML\Project(1)\frontend"
+  npm install
+
+
+STEP 1: Start the Backend (FastAPI)
+-------------------------------------
+Open a terminal and run:
+
+  cd "e:\d2d btech sem 5\ML\Project(1)\backend"
+  python -m uvicorn main:app --host 127.0.0.1 --port 8000
+
+Wait for the message: "Uvicorn running on http://127.0.0.1:8000"
+
+
+STEP 2: Start the Frontend (React + Vite)
+-------------------------------------
+Open a SECOND terminal and run:
+
+  cd "e:\d2d btech sem 5\ML\Project(1)\frontend"
+  npm run dev -- --port 5173
+
+
+STEP 3: Open the App
+-------------------------------------
+Go to your browser and visit:
+
+  http://localhost:5173
+
+API Docs (Swagger UI):
+  http://localhost:8000/docs
+
+
+QUICK START (Windows):
+  Double-click start.bat in the project root folder.
+
+
+========================================
+  Notes
+========================================
+
+- The backend loads pre-trained .pkl models for each stock:
+    ITC.NS       -> tomorrow_close_predict.pkl  (Linear Regression)
+    TCS.NS       -> tcs_model.pkl               (Random Forest)
+    HDFCBANK.NS  -> hdfc_model.pkl              (Gradient Boosting)
+
+- If a .pkl file is missing, the backend falls back to
+  training a Linear Regression model on the fly.
+
+- Prediction: Enter today's Open, High, Low, Volume
+  to get tomorrow's predicted Close price.
+
+- Internet connection is required (yfinance downloads stock data).

@@ -1,0 +1,53 @@
+.comp-card {}
+
+.comp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.comp-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.comp-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.comp-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.comp-tag.active {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.comp-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.comp-tooltip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
